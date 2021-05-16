@@ -1,62 +1,33 @@
-import requests
-import concurrent.futures
+from scraper import multi_scrape
+from bs4 import BeautifulSoup
 
 
-def get_html(url):
+def parse(html):
     try:
-        return requests.get(url).content.decode("utf-8")
-    except Exception as e:
-        print("GET ERROR " + url)
-        print(e)
+        soup = BeautifulSoup(html, 'html5lib')
+        # print(soup.prettify())
+        newsContentBlock = soup.find_all(
+            "div", {"class": "news-content-block"})
+        contentTable = newsContentBlock[0].findAll('p')
+        content = []
+        for p in contentTable:
+            content.append(p.text.strip() + '\n')
+        return content
+    except:
+        # print("PARSE ERROR")
+        pass
 
 
-def write(filepath, content):
-    try:
-        with open(filepath, "w") as w:
-            w.writelines(content)
-        w.close()
-    except Exception as e:
-        print("WRITE ERROR " + filepath)
-        print(e)
+def main():
+    start = 11002
+    end = 16002
+    base_url = "https://hetq.am/hy/article/"
+    prefix = "data/hetqam/"
+    filenames = [str(n).zfill(5) for n in range(start, end+1)]
+    filepath_url_dict = {prefix + filename +
+                         ".txt": base_url + filename for filename in filenames}
+    multi_scrape(filepath_url_dict, parse)
 
 
-def single_scrape(filepath, url, parse_func=None):
-    try:
-        html = get_html(url)
-        if len(html) > 0:
-            if parse_func is not None:
-                content = parse_func(html)
-            else:
-                content = html
-            write(filepath, content)
-    except Exception as e:
-        print("SCRAPE ERROR " + url)
-        print(e)
-
-
-def multi_scrape(filepath_url_dict, parse_func=None):
-    total = len(filepath_url_dict)
-    with concurrent.futures.ThreadPoolExecutor() as executor:  # optimally defined number of threads
-        future_to_url = {executor.submit(
-            get_html, filepath_url_dict[filepath]): filepath for filepath in filepath_url_dict.keys()}
-        count = 0
-        for future in concurrent.futures.as_completed(future_to_url):
-            filepath = future_to_url[future]
-            try:
-                data = future.result()
-            except Exception as exc:
-                # print('%r generated an exception: %s' % (url, exc))
-                pass
-            else:
-                # print('%r page is %d bytes' % (url, len(data)))
-                html = data
-                if len(html) > 0:
-                    if parse_func is not None:
-                        content = parse_func(html)
-                    else:
-                        content = html
-                    write(filepath, content)
-
-                print("  %d/%d" % (count, total), end="\r", flush=True)
-                count += 1
-    print("")
+if __name__ == "__main__":
+    main()
