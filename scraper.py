@@ -40,17 +40,18 @@ def single_scrape(filepath, url, parse_func=None):
 
 def multi_scrape(filepath_url_dict, parse_func=None):
     total = len(filepath_url_dict)
-    with concurrent.futures.ThreadPoolExecutor() as executor:  # optimally defined number of threads
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        filepaths = filepath_url_dict.keys()
         future_to_url = {executor.submit(
-            get_html, filepath_url_dict[filepath]): filepath for filepath in filepath_url_dict.keys()}
+            get_html, filepath_url_dict[fp]): fp for fp in filepaths}
         count = 0
         for future in concurrent.futures.as_completed(future_to_url):
             filepath = future_to_url[future]
+            url = filepath_url_dict[filepath]
             try:
                 data = future.result()
-            except Exception as exc:
-                # print('%r generated an exception: %s' % (url, exc))
-                pass
+            except Exception as e:
+                print('%r generated an exception: %s' % (url, e))
             else:
                 # print('%r page is %d bytes' % (url, len(data)))
                 html = data
