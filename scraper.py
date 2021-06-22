@@ -23,7 +23,7 @@ def write(filepath, content):
         pass
 
 
-def single_scrape(filepath, url, parse_func=None):
+def single_scrape(url, filepath=None, parse_func=None):
     try:
         html = get_html(url)
         if len(html) > 0:
@@ -31,7 +31,9 @@ def single_scrape(filepath, url, parse_func=None):
                 content = parse_func(html)
             else:
                 content = html
-            write(filepath, content)
+            if filepath:
+                write(filepath, content)
+        return content
     except Exception as e:
         # print("SCRAPE ERROR " + url)
         # print(e)
