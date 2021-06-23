@@ -6,8 +6,8 @@ def get_html(url):
     try:
         return requests.get(url).content.decode("utf-8")
     except Exception as e:
-        # print("GET ERROR " + url)
-        # print(e)
+        print("GET ERROR " + url)
+        print(e)
         pass
 
 
@@ -18,26 +18,20 @@ def write(filepath, content):
                 w.writelines(content)
             w.close()
     except Exception as e:
-        # print("WRITE ERROR " + filepath)
-        # print(e)
+        print("WRITE ERROR " + filepath)
+        print(e)
         pass
 
 
-def single_scrape(url, filepath=None, parse_func=None):
+def single_scrape(url, filepath=None):
     try:
         html = get_html(url)
         if len(html) > 0:
-            if parse_func is not None:
-                content = parse_func(html)
-            else:
-                content = html
             if filepath:
-                write(filepath, content)
-        return content
+                write(filepath, html)
+        return html
     except Exception as e:
-        # print("SCRAPE ERROR " + url)
-        # print(e)
-        pass
+        print(e)
 
 
 def multi_scrape(filepath_url_dict, parse_func=None):
